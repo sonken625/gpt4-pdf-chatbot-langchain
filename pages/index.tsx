@@ -27,7 +27,7 @@ export default function Home() {
   }>({
     messages: [
       {
-        message: 'Hi, what would you like to learn about this legal case?',
+        message: 'こんにちは！検索botくんです。何か質問がありますか？',
         type: 'apiMessage',
       },
     ],
@@ -51,11 +51,12 @@ export default function Home() {
     setError(null);
 
     if (!query) {
-      alert('Please input a question');
+      alert('質問をいれてください');
       return;
     }
 
     const question = query.trim();
+    
 
     setMessageState((state) => ({
       ...state,
@@ -126,12 +127,12 @@ export default function Home() {
     }
   }
 
-  //prevent empty submissions
+  // prevent empty submissions
   const handleEnter = useCallback(
     (e: any) => {
-      if (e.key === 'Enter' && query) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)&& query) {
         handleSubmit(e);
-      } else if (e.key == 'Enter') {
+      }else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
       }
     },
@@ -165,7 +166,7 @@ export default function Home() {
       <Layout>
         <div className="mx-auto flex flex-col gap-4">
           <h1 className="text-2xl font-bold leading-[1.1] tracking-tighter text-center">
-            Chat With Your Legal Docs
+          検索botくん
           </h1>
           <main className={styles.main}>
             <div className={styles.cloud}>
@@ -247,7 +248,7 @@ export default function Home() {
                 })}
                 {sourceDocs.length > 0 && (
                   <div className="p-5">
-                    <Accordion type="single" collapsible className="flex-col">
+                    <Accordion  type="single" collapsible className="flex-col">
                       {sourceDocs.map((doc, index) => (
                         <div key={`SourceDocs-${index}`}>
                           <AccordionItem value={`item-${index}`}>
@@ -318,11 +319,6 @@ export default function Home() {
             )}
           </main>
         </div>
-        <footer className="m-auto p-4">
-          <a href="https://twitter.com/mayowaoshin">
-            Powered by LangChainAI. Demo built by Mayo (Twitter: @mayowaoshin).
-          </a>
-        </footer>
       </Layout>
     </>
   );
