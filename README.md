@@ -66,3 +66,26 @@
 
 2. `npm run ingest`でベクトルDBが構築される
 
+
+## 以下仕組みの図解
+### pdfをオンプレのベクトルDBにするバッチ
+```mermaid
+graph LR
+    User[ユーザー] -- 質問を入力 --> UI[Next.js UI]
+    UI -- 質問を送信 --> LangChain[LangChain]
+    LangChain -- ベクトル検索 --> ChromaDB[オンプレChromaDB]
+    ChromaDB -- 検索結果を返す --> LangChain
+    LangChain -- 検索結果を元に質問を送信 --> GPT4[GPT-4 API]
+    GPT4 -- 回答を返す --> LangChain
+    LangChain -- 回答とソースを表示 --> UI
+```
+
+### pdfをオンプレのベクトルDBにするバッチ
+```mermaid
+graph LR
+    User -- PDFやファイルをアップロード --> Files[社内ファイル]
+    Files -- ファイルを通知 --> Batch[定期バッチ]
+    Batch -- ベクトルデータを追加 --> ChromaDB
+```
+
+
