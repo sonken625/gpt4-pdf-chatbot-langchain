@@ -2,20 +2,29 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { OpenAIEmbeddings } from 'langchain/embeddings';
 import { Chroma } from 'langchain/vectorstores';
 import { makeChain } from '@/utils/makechain';
-// import { pinecone } from '@/utils/pinecone-client';
-// import { PINECONE_INDEX_NAME, PINECONE_NAME_SPACE } from '@/config/pinecone';
+import { OpenAIChat } from 'langchain/llms';
+
+
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   const { question, history } = req.body;
-
+  
   if (!question) {
     return res.status(400).json({ message: 'No question in the request' });
   }
-  const sanitizedQuestion = question.trim().replaceAll('\n', ' ');
-``
+  
+  const sanitizedQuestion =  await new OpenAIChat({
+    temperature: 0,
+    modelName: 'gpt-3.5-turbo', //change this to older versions (e.g. gpt-3.5-turbo) if you don't have access to gpt-4
+    streaming: false,
+  })._call(`
+  Extract the main keywords or phrases from this question: ${question}
+  Keywords:
+  `)
+
   const vectorStore = await Chroma.fromExistingCollection(
     new OpenAIEmbeddings({}),
     {
@@ -23,7 +32,7 @@ export default async function handler(
       url: 'http://localhost:8882',// もし別URLでChromaを立ち上げている場合はここを変更する
     },
   );
-
+  
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache, no-transform',
@@ -44,6 +53,7 @@ export default async function handler(
       question: sanitizedQuestion,
       chat_history: history || [],
     });
+
 
     console.log('response', response);
     sendData(JSON.stringify({ sourceDocs: response.sourceDocuments }));

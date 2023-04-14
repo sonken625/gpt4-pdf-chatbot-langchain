@@ -36,7 +36,6 @@ export default function Home() {
   });
 
   const { messages, pending, history, pendingSourceDocs } = messageState;
-
   const messageListRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -47,17 +46,12 @@ export default function Home() {
   //handle form submission
   async function handleSubmit(e: any) {
     e.preventDefault();
-
     setError(null);
-
     if (!query) {
       alert('質問をいれてください');
       return;
     }
-
     const question = query.trim();
-    
-
     setMessageState((state) => ({
       ...state,
       messages: [
@@ -231,7 +225,7 @@ export default function Home() {
                                   </AccordionTrigger>
                                   <AccordionContent>
                                     <ReactMarkdown linkTarget="_blank">
-                                      {doc.pageContent}
+                                      {doc.pageContent.replace(/\[/g, '\\[').replace(/\]/g, '\\]')}
                                     </ReactMarkdown>
                                     <p className="mt-2">
                                       <b>Source:</b> {doc.metadata.source}
@@ -257,7 +251,7 @@ export default function Home() {
                             </AccordionTrigger>
                             <AccordionContent>
                               <ReactMarkdown linkTarget="_blank">
-                                {doc.pageContent}
+                                {doc.pageContent.replace(/\[/g, '\\[').replace(/\]/g, '\\]')}
                               </ReactMarkdown>
                             </AccordionContent>
                           </AccordionItem>
