@@ -15,18 +15,23 @@ export default async function handler(
   if (!question) {
     return res.status(400).json({ message: 'No question in the request' });
   }
-  
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('Missing OpenAI Credentials');
+  }
   const sanitizedQuestion =  await new OpenAIChat({
     temperature: 0,
     modelName: 'gpt-3.5-turbo', //change this to older versions (e.g. gpt-3.5-turbo) if you don't have access to gpt-4
     streaming: false,
   })._call(`
-  Extract the main keywords or phrases from this question: ${question}
-  Keywords:
+  sanitize this question for embedding search: ${question}
+  Sanitized question:
   `)
 
+
+  console.log(sanitizedQuestion)
+
   const vectorStore = await Chroma.fromExistingCollection(
-    new OpenAIEmbeddings({}),
+    new OpenAIEmbeddings({modelName:"text-embedding-ada-002"}),
     {
       collectionName: 'langchain_store',
       url: 'http://localhost:8882',// もし別URLでChromaを立ち上げている場合はここを変更する

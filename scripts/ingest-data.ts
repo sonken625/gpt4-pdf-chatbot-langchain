@@ -6,44 +6,49 @@ import {TextLoader, } from 'langchain/document_loaders';
 import { CustomPDFLoader } from '@/utils/customPDFLoader';
 import { PINECONE_INDEX_NAME, PINECONE_NAME_SPACE } from '@/config/pinecone';
 import { DirectoryLoader } from 'langchain/document_loaders';
-
+import { ChromaClient } from 'chromadb'
 /* Name of directory to retrieve your files from */
-const filePath = 'docs/就業規則';
+const filePath = '/Users/koska-user1/OneDrive - トオカツフーズ株式会社/チャットボット用文書保存場所/就業規則';
 
 export const run = async () => {
-  try {
+  
     /*load raw docs from the all files in the directory */
     const directoryLoader = new DirectoryLoader(filePath, {
       '.pdf': (path) => new CustomPDFLoader(path),
-      ".txt": (path) => new TextLoader(path),
     });
 
     // const loader = new PDFLoader(filePath);
-    const rawDocs = await directoryLoader.load();
+    const rawDocs = (await directoryLoader.load()).filter((value)=>{return value.pageContent.length>0});
+    
 
     /* Split text into chunks */
     const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 400,
-      chunkOverlap: 200,
+      chunkSize: 200,
+      chunkOverlap: 150,
     });
 
     const docs = await textSplitter.splitDocuments(rawDocs);
     console.log('split docs', docs);
-
     console.log('creating vector store...');
     /*create and store the embeddings in the vectorStore*/
-    const embeddings = new OpenAIEmbeddings();
-    
-    await Chroma.fromDocuments(docs, embeddings, {
-      collectionName: 'langchain_store',
-      url:"http://localhost:8882" // もし別URLでChromaを立ち上げている場合はここを変更する
-    })
+    const embeddings = new OpenAIEmbeddings({modelName:"text-embedding-ada-002"});
+    const client = new ChromaClient("http://localhost:8882");
+    client.reset();
 
-  } catch (error) {
-    console.log('error', error);
-    throw new Error('Failed to ingest your data');
+  const test =await Chroma.fromDocuments(docs.slice(0,10), embeddings, {
+        collectionName: 'langchain_store',
+        url:"http://localhost:8882" // もし別URLでChromaを立ち上げている場合はここを変更する
+      });
+  
+  for (let i = 10; i < docs.length; i += 100) {
+    await test.addDocuments(docs.slice(i, i + 10));
+    console.log('ingested', i);
   }
+  
 };
+
+
+
 
 (async () => {
   await run();

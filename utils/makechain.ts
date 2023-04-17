@@ -35,11 +35,10 @@ class CustomStuffDocumentsChain extends StuffDocumentsChain{
         const { [this.inputKey]: docs, ...rest } = values;
         return await this.llmChain.call({
             ...rest,
-
-            "source": (docs as Document[]).map(({ pageContent,metadata }) => (JSON.stringify({
-                source: metadata.source+ (metadata.pdf_numpages? `(${metadata.pdf_numpages}ページ)`:""),
-                text: pageContent
-            })))
+            "source":JSON.stringify({
+              source: (docs as Document[]).map(({ pageContent,metadata }) => (metadata.source+ (metadata.pdf_numpages? `(${metadata.pdf_numpages}ページ)`:""))),
+              text: (docs as Document[]).reduce((previous,{ pageContent}) => (pageContent+previous),"")
+          })
         });
     }
 }
@@ -57,6 +56,7 @@ export const makeChain = (
 
   const llmChain = new LLMChain({ prompt: QA_PROMPT, llm: new OpenAIChat({
           temperature: 0,
+          maxTokens:1000,
           modelName: 'gpt-4', //change this to older versions (e.g. gpt-3.5-turbo) if you don't have access to gpt-4
           streaming: Boolean(onTokenStream),
           callbackManager: onTokenStream
@@ -75,6 +75,6 @@ export const makeChain = (
     combineDocumentsChain: docChain,
     questionGeneratorChain: questionGenerator,
     returnSourceDocuments: true,
-    k: 3, //number of source documents to return
+    k: 10, //number of source documents to return
   });
 };
